@@ -74,6 +74,8 @@ var (
 
 	// DefaultWindowsPauseCommand default container pause command for Windows
 	DefaultWindowsPauseCommand = []string{"powershell", "-c", "ping -t localhost"}
+
+	DefaultAnnotationsOnPod = make(map[string]string)
 )
 
 const (
@@ -119,6 +121,7 @@ var _ = BeforeSuite(func() {
 	if err != nil {
 		panic(err)
 	}
+	DefaultAnnotationsOnPod = TestContext.Annotations
 
 	for _, callback := range beforeSuiteCallbacks {
 		callback()
@@ -205,9 +208,10 @@ func RunDefaultPodSandbox(c internalapi.RuntimeService, prefix string) string {
 	namespace := DefaultNamespacePrefix + NewUUID()
 
 	config := &runtimeapi.PodSandboxConfig{
-		Metadata: BuildPodSandboxMetadata(podSandboxName, uid, namespace, DefaultAttempt),
-		Linux:    &runtimeapi.LinuxPodSandboxConfig{},
-		Labels:   DefaultPodLabels,
+		Metadata:    BuildPodSandboxMetadata(podSandboxName, uid, namespace, DefaultAttempt),
+		Linux:       &runtimeapi.LinuxPodSandboxConfig{},
+		Labels:      DefaultPodLabels,
+		Annotations: DefaultAnnotationsOnPod,
 	}
 	return RunPodSandbox(c, config)
 }
@@ -235,9 +239,10 @@ func CreatePodSandboxForContainer(c internalapi.RuntimeService) (string, *runtim
 	uid := DefaultUIDPrefix + NewUUID()
 	namespace := DefaultNamespacePrefix + NewUUID()
 	config := &runtimeapi.PodSandboxConfig{
-		Metadata: BuildPodSandboxMetadata(podSandboxName, uid, namespace, DefaultAttempt),
-		Linux:    &runtimeapi.LinuxPodSandboxConfig{},
-		Labels:   DefaultPodLabels,
+		Metadata:    BuildPodSandboxMetadata(podSandboxName, uid, namespace, DefaultAttempt),
+		Linux:       &runtimeapi.LinuxPodSandboxConfig{},
+		Labels:      DefaultPodLabels,
+		Annotations: DefaultAnnotationsOnPod,
 	}
 
 	podID := RunPodSandbox(c, config)
@@ -291,7 +296,6 @@ func CreateContainerWithError(rc internalapi.RuntimeService, ic internalapi.Imag
 	if status == nil {
 		PullPublicImage(ic, imageName, podConfig)
 	}
-
 	By("Create container.")
 	containerID, err := rc.CreateContainer(podID, config, podConfig)
 	return containerID, err

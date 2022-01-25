@@ -24,6 +24,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	crunHandlerAnnotation = "run.oci.handler"
+	krunHandler           = "krun"
+)
+
 // ServerConfiguration is the config for connecting to and using a CRI server
 type ServerConfiguration struct {
 	// RuntimeEndpoint is CRI server runtime endpoint

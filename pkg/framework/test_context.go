@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/onsi/ginkgo/config"
@@ -32,6 +33,27 @@ import (
 type TestImageList struct {
 	DefaultTestContainerImage string `yaml:"defaultTestContainerImage"`
 	WebServerTestImage        string `yaml:"webServerTestImage"`
+}
+
+type AnnotationsFlag map[string]string
+
+func (i *AnnotationsFlag) String() string {
+	if *i == nil {
+		return ""
+	}
+	return fmt.Sprintf("%v", i)
+}
+
+func (i *AnnotationsFlag) Set(value string) error {
+	if *i == nil {
+		(*i) = make(map[string]string)
+	}
+	v := strings.Split(value, "=")
+	if len(v) != 2 {
+		return fmt.Errorf("Failed parsing value %s", value)
+	}
+	(*i)[v[0]] = v[1]
+	return nil
 }
 
 // TestContextType is the type of test context.
@@ -51,6 +73,7 @@ type TestContextType struct {
 	// Test images-related settings.
 	TestImagesFilePath string
 	TestImageList      TestImageList
+	Annotations        AnnotationsFlag
 
 	// Benchmark setting.
 	Number int
@@ -102,6 +125,7 @@ func RegisterFlags() {
 		TestContext.IsLcow = false
 	}
 	flag.StringVar(&TestContext.RegistryPrefix, "registry-prefix", DefaultRegistryPrefix, "A possible registry prefix added to all images, like 'localhost:5000/'")
+	flag.Var(&TestContext.Annotations, "annotation", "Annotations to be added on the pod with key=value multiple times")
 }
 
 // Loads the custom images mapping file (if defined) into the TestContextType.
